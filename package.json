@@ -1,0 +1,20 @@
+{
+  "name": "cre-room-of-errors-webxr",
+  "private": true,
+  "version": "0.1.0",
+  "description": "CRE·호흡기감염 격리환자 '오류의 방' WebXR 교육 프로토타입 (Three.js)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:https": "vite --mode https",
+    "build": "vite build",
+    "preview": "vite preview --host"
+  },
+  "dependencies": {
+    "three": "0.169.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-basic-ssl": "1.1.0",
+    "vite": "5.4.10"
+  }
+}
