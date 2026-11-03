@@ -50,6 +50,14 @@ export const errors = [
     ref: '질병관리청 CRE 감염증 관리 지침 – 환자 전용 물품',
   },
   {
+    id: 'medCart',
+    category: '감염관리',
+    title: '투약 카트 격리실 반입',
+    desc: '여러 환자가 함께 쓰는 투약 카트가 격리실 안에 들어와 있습니다.',
+    rationale: '투약 카트처럼 여러 병실을 오가는 공용 장비는 격리실에 들이지 않습니다. 필요한 약과 물품만 1회분씩 준비해 들어가야 카트를 통한 교차 감염을 막을 수 있습니다.',
+    ref: '질병관리청 CRE 감염증 관리 지침 – 환경 및 물품 관리',
+  },
+  {
     id: 'wasteBin',
     category: '환경관리',
     title: '의료폐기물 용기 관리',
@@ -85,7 +93,8 @@ export const errors = [
 
 export const distractors = [
   { id: 'window', msg: '창문은 닫혀 있고 정상입니다.' },
-  { id: 'oxygen', msg: '벽면 산소 공급장치는 정상입니다.' },
+  { id: 'oxygen', msg: '산소 유량계(2 L/min)와 가습병, 비강 캐뉼라 연결은 정상입니다.' },
   { id: 'clock', msg: '벽시계는 오류와 관련이 없습니다.' },
-  { id: 'tableOk', msg: '침상 옆 테이블 자체는 정상입니다. 위에 놓인 물품을 살펴보세요.' },
+  { id: 'tableOk', msg: '침상 옆 협탁 자체는 정상입니다. 위에 놓인 물품을 살펴보세요.' },
+  { id: 'thermometer', msg: '환자 전용 고막 체온계와 일회용 프로브 커버는 정상입니다. 측정할 때마다 커버를 새것으로 바꿉니다.' },
 ];

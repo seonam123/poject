@@ -25,12 +25,13 @@ controls.target.set(-0.3, 1.0, -1.2);
 controls.enableDamping = true;
 controls.maxDistance = 4;
 controls.update();
+window.__debug = { camera, controls }; // 콘솔에서 시점 확인용
 
 // VR 시작 위치(문 안쪽, 바닥 기준)
 const XR_START = { x: 1.0, z: 2.2 };
 const rig = scene; // 컨트롤러·패널은 월드 좌표에 둡니다
 
-const { interactables } = buildRoom(scene);
+const { interactables, updaters } = buildRoom(scene);
 
 // ---------- VR 안 피드백 패널 ----------
 const panelCanvas = document.createElement('canvas');
@@ -195,6 +196,7 @@ renderer.setAnimationLoop((t) => {
   } else {
     controls.update();
   }
+  updaters.forEach((fn) => fn(t));
   if (t - lastTick > 250) { game.tick(); lastTick = t; }
   renderer.render(scene, camera);
 });
