@@ -156,7 +156,9 @@ export function buildPatient({ backrestDeg = 45 } = {}) {
   group.add(ivArm);
   const ivSite = new THREE.Object3D();
   const o2Port = new THREE.Object3D();
-  group.add(ivSite, o2Port);
+  const spo2Port = new THREE.Object3D(); // 산소포화도 센서 케이블이 나오는 지점
+  const ecgPort = new THREE.Object3D(); // 심전도 줄이 모이는 지점
+  group.add(ivSite, o2Port, spo2Port, ecgPort);
 
   const ready = new GLTFLoader().loadAsync(MODEL_URL).then((gltf) => {
     const model = gltf.scene;
@@ -275,8 +277,32 @@ export function buildPatient({ backrestDeg = 45 } = {}) {
     hit.position.copy(el.clone().lerp(wr, 0.6));
     ivArm.add(hit);
 
+    // --- 산소포화도(SpO2) 손가락 센서: 오른손 검지 끝에 집게 ---
+    const i2 = boneLocal('RightHandIndex2'), i4 = boneLocal(bones.RightHandIndex4 ? 'RightHandIndex4' : 'RightHandIndex3');
+    const fDir = i4.clone().sub(i2).normalize();
+    const probe = new THREE.Group();
+    const clipBody = new THREE.Mesh(new RoundedBoxGeometry(0.03, 0.028, 0.042, 3, 0.009), m(0xe5e7eb, { roughness: 0.5 }));
+    probe.add(clipBody);
+    const clipTop = new THREE.Mesh(new RoundedBoxGeometry(0.031, 0.01, 0.036, 2, 0.004), m(0x2563eb, { roughness: 0.5 }));
+    clipTop.position.y = 0.012; probe.add(clipTop);
+    const glow = new THREE.Mesh(new THREE.SphereGeometry(0.004, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff2a2a }));
+    glow.position.set(0, -0.014, 0); probe.add(glow);
+    probe.position.copy(i2.clone().lerp(i4, 0.6));
+    probe.quaternion.setFromUnitVectors(V(0, 0, 1), fDir);
+    group.add(probe);
+    spo2Port.position.copy(probe.position).addScaledVector(fDir, -0.03);
+
+    // --- 심전도(ECG) 전극 줄: 환의 V자 목선에서 3가닥(흰·검·빨)이 나와 한 줄로 모임 ---
+    const rad = THREE.MathUtils.degToRad(backrestDeg);
+    const chestN = V(0, Math.cos(rad), Math.sin(rad)); // 기울어진 가슴의 앞쪽 방향
+    const collar = boneLocal('Spine2').lerp(boneLocal('Neck'), 0.45).addScaledVector(chestN, 0.1);
+    ecgPort.position.copy(collar).addScaledVector(chestN, 0.03).add(V(0.09, 0, 0.02));
+    [[0xf8fafc, -0.025], [0x111827, 0], [0xdc2626, 0.025]].forEach(([c, dx]) => {
+      group.add(tube([collar.clone().add(V(dx, -0.01, 0.01)), collar.clone().addScaledVector(chestN, 0.02).add(V(dx * 0.6 + 0.04, 0, 0.015)), ecgPort.position.clone()], 0.0018, m(c, { roughness: 0.5 }), 16));
+    });
+
     return { model, bones };
   });
 
-  return { group, ivArm, ivSite, o2Port, ready };
+  return { group, ivArm, ivSite, o2Port, spo2Port, ecgPort, ready };
 }

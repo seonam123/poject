@@ -94,6 +94,7 @@ export const errors = [
 export const distractors = [
   { id: 'window', msg: '창문은 닫혀 있고 정상입니다.' },
   { id: 'oxygen', msg: '산소 유량계(2 L/min)와 가습병, 비강 캐뉼라 연결은 정상입니다.' },
+  { id: 'monitor', msg: '환자 감시 모니터(심전도·산소포화도·혈압·호흡)는 정상 작동 중입니다. 수치 변화와 알람 설정을 계속 확인하세요.' },
   { id: 'clock', msg: '벽시계는 오류와 관련이 없습니다.' },
   { id: 'tableOk', msg: '침상 옆 협탁 자체는 정상입니다. 위에 놓인 물품을 살펴보세요.' },
   { id: 'thermometer', msg: '환자 전용 고막 체온계와 일회용 프로브 커버는 정상입니다. 측정할 때마다 커버를 새것으로 바꿉니다.' },

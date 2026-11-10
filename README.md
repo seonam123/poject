@@ -46,11 +46,13 @@ WebXR은 **HTTPS**(또는 localhost)에서만 동작합니다.
 │  ├─ room.js              # 격리병실 3D 구성(오브젝트별 hotspot id)
 │  ├─ patient.js           # 환자: 인체 GLB 모델 로드·반좌위 자세·환의·캐뉼라·수액 카테터
 │  ├─ blanket.js           # 다리 모양에 맞춰 덮이는 푹신한 누빔 이불 + 접어 넘긴 시트
+│  ├─ headwall.js          # 침대 머리 위 의료가스·전원 콘솔 + 환자 감시 모니터(실시간 파형)
 │  ├─ scenario.js          # ★ 시나리오 데이터: 오류 목록·해설·근거, 정상 물품
 │  ├─ game.js              # 발견/오답/시간/점수, 결과 로그
 │  └─ style.css
 ├─ public/models/patient.glb # 환자 인체 모델(Ready Player Me 아바타, three.js 예제에서 가져옴)
 ├─ docs/scenario-design.md # 시나리오 설계서(중간보고서 초안)
+├─ start-server.bat        # 더블클릭하면 로컬 서버 실행 + 브라우저 열기 (Windows)
 └─ .github/workflows/deploy.yml
 ```
 

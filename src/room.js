@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { buildPatient, HINGE_Z } from './patient.js';
+import { buildHeadwall, CONSOLE } from './headwall.js';
 
 // 침대 등받이 각도(도). 30~45° 정도의 반좌위(semi-Fowler)
 export const BACKREST_DEG = 45;
@@ -357,13 +358,52 @@ export function buildRoom(scene) {
   med.rotation.y = -Math.PI / 2; // 앞면(서랍)이 병실 가운데를 향함
   add(med, 'medCart');
 
+  // 환자용 슬리퍼 한 켤레: 침대 오른쪽(내려오는 쪽) 바닥, 앞코가 바깥을 향해 바로 신을 수 있게
+  const makeSlipper = (side) => {
+    const g = new THREE.Group();
+    // 발바닥 모양(뒤꿈치 좁고 앞쪽 넓음). side=1 오른발, -1 왼발 (엄지 쪽이 안쪽으로 볼록)
+    const L = 0.27, sh = new THREE.Shape();
+    const w = (v) => v * side;
+    sh.moveTo(0, 0);
+    sh.bezierCurveTo(w(0.04), 0, w(0.042), 0.05, w(0.04), 0.09);
+    sh.bezierCurveTo(w(0.038), 0.15, w(0.058), 0.19, w(0.054), 0.235);
+    sh.bezierCurveTo(w(0.05), L, w(-0.005), L + 0.004, w(-0.03), 0.255);
+    sh.bezierCurveTo(w(-0.05), 0.235, w(-0.052), 0.17, w(-0.042), 0.11);
+    sh.bezierCurveTo(w(-0.036), 0.06, w(-0.04), 0, 0, 0);
+    const soleGeo = new THREE.ExtrudeGeometry(sh, { depth: 0.018, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 3, curveSegments: 24 });
+    soleGeo.rotateX(-Math.PI / 2); // 바닥에 눕힘: 길이 방향이 -z
+    const sole = new THREE.Mesh(soleGeo, mat(0x9aa3ad, { roughness: 0.9 }));
+    sole.position.y = 0.004; g.add(sole);
+    const insole = new THREE.Mesh(new THREE.ShapeGeometry(sh, 24), mat(0xdbe4ee, { roughness: 0.95 }));
+    insole.rotation.x = -Math.PI / 2; insole.position.y = 0.0265; insole.scale.setScalar(0.94); insole.position.z = -0.008; g.add(insole);
+    // 발등 덮개(밴드): 반원통을 발 폭에 맞춰 눌러서 앞쪽에 씌움
+    const bandGeo = new THREE.CylinderGeometry(0.05, 0.052, 0.085, 28, 1, true, Math.PI / 2, Math.PI);
+    bandGeo.rotateX(Math.PI / 2); // 원통 축을 발 길이 방향(z)으로, 열린 쪽이 아래
+    const band = new THREE.Mesh(bandGeo, mat(0x2f4f7f, { roughness: 0.8, side: THREE.DoubleSide }));
+    band.scale.set(1.05, 0.62, 1);
+    band.position.set(w(0.008), 0.026, -0.175);
+    g.add(band);
+    const trim = new THREE.Mesh(new THREE.TorusGeometry(0.051, 0.004, 8, 28, Math.PI), mat(0xe5e7eb));
+    trim.scale.set(1.05, 0.62, 1); trim.position.set(w(0.008), 0.026, -0.133); g.add(trim);
+    return g;
+  };
+  const slippers = new THREE.Group();
+  const slipR = makeSlipper(1); slipR.position.set(0.065, 0, 0); slippers.add(slipR);
+  const slipL = makeSlipper(-1); slipL.position.set(-0.065, 0, 0.012); slipL.rotation.y = 0.06; slippers.add(slipL);
+  slippers.position.set(-1.38, 0, -0.95);
+  slippers.rotation.y = Math.PI / 2 + 0.05; // 앞코가 침대 바깥(-x)을 향함
+  scene.add(slippers);
+
   // 정상 물품(오답 유도)
   const win = box(1.4, 1.0, 0.03, 0xbfdbfe, { transparent: true, opacity: 0.6 });
   win.position.set(-ROOM.w / 2 + 0.02, 1.5, -0.5); win.rotation.y = Math.PI / 2;
   add(win, 'window');
-  // 벽면 산소 공급장치: 아웃렛 + 유량계(부유구 2 L/min) + 가습병 → 비강 캐뉼라로 연결 (정상)
-  const o2 = new THREE.Group();
+  // 침대 머리 위 벽: 의료가스·전원 콘솔 + 환자 감시 모니터 (headwall.js)
   const wallZ = -ROOM.d / 2;
+  const headwall = buildHeadwall({ scene, wallZ, textPlane, add, updaters });
+
+  // 벽면 산소 공급장치(콘솔 위): 아웃렛 + 유량계(부유구 2 L/min) + 가습병 → 비강 캐뉼라로 연결 (정상)
+  const o2 = new THREE.Group();
   const plate = new THREE.Mesh(new RoundedBoxGeometry(0.12, 0.14, 0.02, 2, 0.006), mat(0x16a34a));
   plate.position.set(0, 0.1, 0.01); o2.add(plate);
   const plateLbl = textPlane('O₂', { w: 0.06, h: 0.03, bg: '#16a34a', fg: '#ffffff', font: 160 });
@@ -388,7 +428,7 @@ export function buildRoom(scene) {
   humidCap.position.set(0, -0.035, 0.06); o2.add(humidCap);
   const nipple = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.006, 0.03, 10), mat(0x16a34a));
   nipple.rotation.z = Math.PI / 2; nipple.position.set(0.05, -0.035, 0.06); o2.add(nipple);
-  o2.position.set(-0.9, 1.25, wallZ);
+  o2.position.set(-0.9, 1.25, wallZ + CONSOLE.depth);
   add(o2, 'oxygen');
   // 가습병 기포(애니메이션)
   const bubbles = [0, 1, 2].map(() => { const b = new THREE.Mesh(new THREE.SphereGeometry(0.004, 8, 6), clear(0.8)); o2.add(b); return b; });
@@ -406,6 +446,20 @@ export function buildRoom(scene) {
       new THREE.Vector3(-1.17, 1.06, -1.95), new THREE.Vector3(-0.88, 1.12, -1.62), o2In,
     ]);
     scene.add(new THREE.Mesh(new THREE.TubeGeometry(o2Curve, 120, 0.0032, 8), mat(0xcdeff5, { transparent: true, opacity: 0.9, roughness: 0.25 })));
+
+    // 모니터 케이블: 심전도(회색 굵은 줄) → 환의 목선, 산소포화도(파란 줄) → 오른손 검지 센서
+    const port = headwall.cablePort();
+    const ecgIn = patient.ecgPort.getWorldPosition(new THREE.Vector3());
+    const spo2In = patient.spo2Port.getWorldPosition(new THREE.Vector3());
+    const cableMat = (c) => mat(c, { roughness: 0.55 });
+    scene.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+      port, port.clone().add(new THREE.Vector3(-0.02, -0.35, 0.05)), new THREE.Vector3(-0.15, 1.12, -2.05),
+      new THREE.Vector3(-0.3, 1.18, -1.8), ecgIn,
+    ]), 100, 0.0045, 8), cableMat(0x9ca3af)));
+    scene.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+      port.clone().add(new THREE.Vector3(0.03, 0, 0)), port.clone().add(new THREE.Vector3(0.02, -0.4, 0.08)), new THREE.Vector3(-0.1, 1.05, -1.9),
+      new THREE.Vector3(-0.2, 1.02, -1.6), new THREE.Vector3(-0.35, 1.0, -1.4), spo2In,
+    ]), 120, 0.0035, 8), cableMat(0x2563eb)));
   });
   const clock = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.03, 32), mat(0xffffff));
   clock.rotation.x = Math.PI / 2; clock.position.set(1.2, 2.2, -ROOM.d / 2 + 0.03);
